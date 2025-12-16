@@ -199,18 +199,21 @@ class BST {
         return height(node.left) - height(node.right);
     }
 
-    private boolean balance(Node node) {
+    private void balance(Node node) {
         if (node == null) {
-            return true;
+            return;
+        }
+        if (Math.abs(height(node)) <= 1) {
+            balance(node.left);
+            balance(node.right);
         }
         if (height(node) > 0) {
             rotateLeft(node.right, node);
-            return balance(node);
+            balance(node);
         }
         if (height(node) < 0) {
             rotateRight(node.left, node);
-            return balance(node);
+            balance(node);
         }
-        return balance(node.left) && balance(node.right);
     }
 }                                                                                                                                                                                                                               
