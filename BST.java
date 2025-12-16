@@ -191,4 +191,26 @@ class BST {
         oldRoot.left = subRoot.left.right;
         subRoot.left.right = oldRoot;
     }
-}
+
+    private int height(Node node) {
+        if (node == null) {
+            return 0;
+        }
+        return height(node.left) - height(node.right);
+    }
+
+    private boolean balance(Node node) {
+        if (node == null) {
+            return true;
+        }
+        if (height(node) > 0) {
+            rotateLeft(node.right, node);
+            return balance(node);
+        }
+        if (height(node) < 0) {
+            rotateRight(node.left, node);
+            return balance(node);
+        }
+        return balance(node.left) && balance(node.right);
+    }
+}                                                                                                                                                                                                                               

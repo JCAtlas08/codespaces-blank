@@ -1,0 +1,23 @@
+public static <T extends Comparable<T>> {
+    boolean binarySearch(T[] data, int min, int max, T target) {
+        if (min.compareTo(max) == 0) {
+            if (data[min].compareTo(target) == 0) {
+                return true;
+            }
+        } else {
+            return false;
+        }
+
+        int mid = (max - min) / 2;
+
+        if (data[mid].compareTo(target) == 0) {
+            return true;
+        }
+        if (target.compareTo(mid) > 0) {
+            binarySearch(data, mid + 1, max, target);
+        } else if (target.compareTo(mid) < 0) {
+            binarySearch(data, min, mid - 1, target);
+        }
+        return false;
+    }
+}
