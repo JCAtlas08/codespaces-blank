@@ -1,4 +1,5 @@
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 
 class BST {
     Node root;
@@ -44,19 +45,19 @@ class BST {
         if (node.key == key) {
             return node;
         } else if (key < node.key) {
-            return search(key, node.left);
+            return searchNode(key, node.left);
         } else {
-            return search(key, node.right);
+            return searchNode(key, node.right);
         }
-        return node;
     }
 
     int remove(int key) {
-        if (search(key, node)) {
-            ArrayList<Node> nodes = getNodesFromNode(searchNode(key, node));
-            for (Node n : nodes) {
-                if (n.key != key) {
-                    insert(n.key, root);
+        if (search(key, root)) {
+            for (ArrayList<Node> nodeList : getNodesFromNode(root, 0, new ArrayList<ArrayList<Node>>())) {
+                for (Node node : nodeList) {
+                    if (node.key != key) {
+                        insert(node.key, root);
+                    }
                 }
             }
             return key;
@@ -68,7 +69,7 @@ class BST {
     public String toString() {
         String nodes = "";
 
-        for (ArrayList<Node> nodeList : getNodesFromNode(root, 0, new ArrayList<Node>())) {
+        for (ArrayList<Node> nodeList : getNodesFromNode(root, 0, new ArrayList<ArrayList<Node>>())) {
             for(Node node : nodeList)
                 nodes += node.key;
             nodes += "\n";
@@ -76,14 +77,14 @@ class BST {
         return nodes;
     }
 
-    ArrayList<ArrayList<Node>> getNodesFromNode(Node node, int depth, ArrayList<Node> nodes) { // preorder traversal
+    ArrayList<ArrayList<Node>> getNodesFromNode(Node node, int depth, ArrayList<ArrayList<Node>> nodes) { // preorder traversal
         if (nodes.size() < depth) {
-            nodes.add(new ArrayList());
+            nodes.add(new ArrayList<Node>());
         }
         if (node != null) {
             nodes.get(depth).add(node);
-            nodes.addAll(getNodesFromNode(node.left), depth++, nodes);
-            nodes.addAll(getNodesFromNode(node.right), depth++, nodes);
+            nodes.addAll(getNodesFromNode(node.left, depth++, nodes));
+            nodes.addAll(getNodesFromNode(node.right, depth++, nodes));
         }
         return nodes;
     }
@@ -100,7 +101,7 @@ class BST {
             return true;
         }
         // check for current node value with left node value and right node value and recursively check for left sub tree and right sub tree
-        if(root.data >= minValue && root.data <= maxValue && isBSTOrNot(root.left, minValue, root.data) && isBSTOrNot(root.right, root.data, maxValue)){
+        if(root.key >= minValue && root.key <= maxValue && isBSTOrNot(root.left, minValue, root.key) && isBSTOrNot(root.right, root.key, maxValue)){
             return true;
         }
         return false;
@@ -147,7 +148,7 @@ class BST {
         }
  
         showTrunks(trunk);
-        System.out.println(" " + root.data);
+        System.out.println(" " + root.key);
  
         if (prev != null) {
             prev.str = prev_str;
@@ -155,5 +156,39 @@ class BST {
         trunk.str = "   |";
  
         printTree(root.left, trunk, false);
+    }
+
+    // rotates the tree such that the subRoot is replaced with it's right child with subRoot becoming the left child of the new subRoot. prev now points to the new subRoot.
+    private void rotateLeft(Node subRoot, Node prev) {
+        Node oldRoot;
+        if (prev == null) {
+            oldRoot = root;
+            root = subRoot.right;
+        } else if (prev.left == subRoot) {
+            oldRoot = prev.left;
+            prev.left = subRoot.right;
+        } else {
+            oldRoot = prev.right;
+            prev.right = subRoot.right;
+        }
+        oldRoot.right = subRoot.right.left;
+        subRoot.right.left = oldRoot;
+    }
+
+    // rotates the tree such that the subRoot is replaced with it's left child with subRoot becoming the right child of the new subRoot. prev now points to the new subRoot.
+    private void rotateRight(Node subRoot, Node prev) {
+        Node oldRoot;
+        if (prev == null) {
+            oldRoot = root;
+            root = subRoot.left;
+        } else if (prev.left == subRoot) {
+            oldRoot = prev.left;
+            prev.left = subRoot.left;
+        } else {
+            oldRoot = prev.right;
+            prev.right = subRoot.left;
+        }
+        oldRoot.left = subRoot.left.right;
+        subRoot.left.right = oldRoot;
     }
 }
