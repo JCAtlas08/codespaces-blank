@@ -1,5 +1,6 @@
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.function.UnaryOperator;
 
 class BST {
     Node root;
@@ -9,22 +10,26 @@ class BST {
         root = null;
     }
 
-    void insert(int key, Node node) {
-        Node newLeaf = new Node(key);
+    void insert(int key) {
         if (root == null) {
-            root = newLeaf;
+            root = new Node(key);
+            return;
+        }
+        insert(new Node(key), root);
+    }
 
-        } else if (key < root.key) {
-            if (root.left == null) {
-                root.left = newLeaf;
+    private void insert(Node newNode, Node node) {
+        if (newNode.key < node.key) {
+            if (node.left == null) {
+                node.left = newNode;
             } else {
-                insert(key, root.left);
+                insert(newNode, node.left);
             }
         } else {
-            if (root.right == null) {
-                root.right = newLeaf;
+            if (node.right == null) {
+                node.right = newNode;
             } else {
-                insert(key, root.right);
+                insert(newNode, node.right);
             }
         }
     }
@@ -51,19 +56,74 @@ class BST {
         }
     }
 
-    int remove(int key) {
-        if (search(key, root)) {
-            for (ArrayList<Node> nodeList : getNodesFromNode(root, 0, new ArrayList<ArrayList<Node>>())) {
-                for (Node node : nodeList) {
-                    if (node.key != key) {
-                        insert(node.key, root);
-                    }
-                }
-            }
-            return key;
-        } else {
-            return -1;
+    public boolean remove(int key){
+        if(remove(key, root, null)== null){
+            return false;
         }
+        else{
+            return true;
+        }
+    }
+
+   private  Node remove(int key, Node node, Node above) {
+        if (node == null) {
+            return node;
+        }
+
+        if (node.key != key) {
+            if (key < node.key) {
+                remove(key, node.left, node);
+            } else {
+                remove(key, node.right, node);
+            }
+
+        } else {
+            //no children
+            if (node.left == null && node.right == null) {
+                if(above == null){
+                    root = null;
+                } else if (above.right == node){
+                    above.right = null;
+                } else {
+                    above.left = null;
+                }
+                return node;
+            }
+
+            // one child
+            else if (node.left != null && node.right == null) {
+                if (above == null) {
+                    root = node.left;
+                } else if (above.right == node) {
+                    above.right = node.left;
+                } else {
+                    above.left = node.left;
+                }
+                return node;
+            } else if (node.left == null && node.right != null) {
+                if (above == null) {
+                    root = node.right;
+                } else if (above.right == node) {
+                    above.right = node.right;
+                } else {
+                    above.left = node.right;
+                }
+                return node;
+            }
+
+            //two children 
+            else {
+                if (above == null) {
+                    root = null; //to be implemented
+                } else if (above.right == node) {
+                    above.right = null; //to be implemented
+                } else {
+                    above.left = null; //to be implemented
+                }
+                return node;
+            }
+        }
+        return node;
     }
 
     public String toString() {
@@ -73,12 +133,13 @@ class BST {
             for(Node node : nodeList)
                 nodes += node.key;
             nodes += "\n";
-        }       
+        }
         return nodes;
     }
 
     ArrayList<ArrayList<Node>> getNodesFromNode(Node node, int depth, ArrayList<ArrayList<Node>> nodes) { // preorder traversal
-        if (nodes.size() < depth) {
+        System.out.println("Loop");
+        if (nodes.size() <= depth) {
             nodes.add(new ArrayList<Node>());
         }
         if (node != null) {
@@ -109,7 +170,7 @@ class BST {
 
  
 
-   // please use the following pieces of code to display your tree in a more easy to follow style (Note* you'll need to place the Trunk class in it's own file)
+   // please use the following pieces of code to di lay your tree in a more easy to follow style (Note* you'll need to place the Trunk class in it's own file)
     public static void showTrunks(Trunk p)
     {
         if (p == null) {
@@ -159,61 +220,76 @@ class BST {
     }
 
     // rotates the tree such that the subRoot is replaced with it's right child with subRoot becoming the left child of the new subRoot. prev now points to the new subRoot.
-    private void rotateLeft(Node subRoot, Node prev) {
-        Node oldRoot;
+    private void rotateLeft(Node node, Node prev) {
+        Node oldRoot = node;
+
+        node = node.right;
+        oldRoot.right = node.left;
+        node.right = oldRoot;
+
         if (prev == null) {
-            oldRoot = root;
-            root = subRoot.right;
-        } else if (prev.left == subRoot) {
-            oldRoot = prev.left;
-            prev.left = subRoot.right;
+            root = node;
         } else {
-            oldRoot = prev.right;
-            prev.right = subRoot.right;
+            if(prev.right == oldRoot){
+                prev.right = node;
+            } else {
+                prev.left = node;
+            }
         }
-        oldRoot.right = subRoot.right.left;
-        subRoot.right.left = oldRoot;
     }
 
     // rotates the tree such that the subRoot is replaced with it's left child with subRoot becoming the right child of the new subRoot. prev now points to the new subRoot.
-    private void rotateRight(Node subRoot, Node prev) {
-        Node oldRoot;
+    private void rotateRight(Node node, Node prev) {
+        Node oldRoot = node;
+
+        node = node.left;
+        oldRoot.left = node.right;
+        node.left = oldRoot;
+
         if (prev == null) {
-            oldRoot = root;
-            root = subRoot.left;
-        } else if (prev.left == subRoot) {
-            oldRoot = prev.left;
-            prev.left = subRoot.left;
+            root = node;
         } else {
-            oldRoot = prev.right;
-            prev.right = subRoot.left;
+            if(prev.right == oldRoot){
+                prev.right = node;
+            } else {
+                prev.left = node;
+            }
         }
-        oldRoot.left = subRoot.left.right;
-        subRoot.left.right = oldRoot;
+    }
+
+    int getHeight() {
+        return height(root);
     }
 
     private int height(Node node) {
         if (node == null) {
             return -1;
         }
-        return (1 + height(node.left)) - (1 + height(node.right));
+        //return ((1 + height(node.left)) - (1 + height(node.right)));
+        return 1 + (height(node.left) - height(node.right));
+    }
+
+    void balance() {
+        balance(root);
     }
 
     private void balance(Node node) {
         if (node == null) {
             return;
         }
-        if (Math.abs(height(node)) <= 1) {
-            balance(node.left);
-            balance(node.right);
-        }
-        if (height(node) > 0) {
-            rotateLeft(node.right, node);
-            balance(node);
-        }
-        if (height(node) < 0) {
-            rotateRight(node.left, node);
-            balance(node);
+        if (height(node) != 0) {
+            if (height(node) > 0) {
+                balance(node.left);
+                if (node.left != null) {
+                    rotateLeft(node.left, node);
+                }
+            }
+            if (height(node) < 0) {
+                balance(node.right);
+                if (node.right != null) {
+                    rotateRight(node.right, node);
+                }
+            }
         }
     }
-}                                                                                                                                                                                                                               
+}
