@@ -11,27 +11,42 @@ class BST {
     }
 
     void insert(int key) {
-        if (root == null) {
-            root = new Node(key);
-            return;
-        }
-        insert(new Node(key), root);
+        root = insert(root, new Node(key));
     }
 
-    private void insert(Node newNode, Node node) {
-        if (newNode.key < node.key) {
-            if (node.left == null) {
-                node.left = newNode;
-            } else {
-                insert(newNode, node.left);
-            }
-        } else {
-            if (node.right == null) {
-                node.right = newNode;
-            } else {
-                insert(newNode, node.right);
-            }
+    private Node insert(Node node, Node newNode) {
+        if (node == null) {
+            return newNode;
         }
+
+        if (newNode.key < node.key) {
+            node.left = insert(node.left, newNode);
+        } else {
+            node.right = insert(node.right, newNode);
+        }
+        
+        int bal = balance(node);
+
+        //Left Heavy
+        if (bal > 1 && newNode.key < node.left.key) {
+            return rotateRight(node);
+        }
+        //Right Heavy
+        if (bal < -1 && newNode.key > node.right.key) {
+            return rotateLeft(node);
+        }
+        //Left-Right Heavy
+        if (bal > 1 && newNode.key > node.left.key) {
+            node.left = rotateLeft(node.left);
+            return rotateRight(node);
+        }
+        //Right-Left Heavy
+        if (bal < -1 && newNode.key < node.right.key) {
+            node.right = rotateRight(node.right);
+            return rotateLeft(node);
+        }
+
+        return node;
     }
 
     boolean search(int key, Node node) {
@@ -219,42 +234,32 @@ class BST {
         printTree(root.left, trunk, false);
     }
 
-    // rotates the tree such that the subRoot is replaced with it's right child with subRoot becoming the left child of the new subRoot. prev now points to the new subRoot.
-    private void rotateLeft(Node node, Node prev) {
-        Node oldRoot = node;
-
-        node = node.right;
-        oldRoot.right = node.left;
-        node.right = oldRoot;
-
-        if (prev == null) {
-            root = node;
-        } else {
-            if(prev.right == oldRoot){
-                prev.right = node;
-            } else {
-                prev.left = node;
-            }
+    private Node rotateLeft(Node node) {
+        if (node == null || node.right == null) {
+            return node;
         }
+
+        Node n = node.right;
+        Node temp = n.left;
+
+        n.left = node;
+        node.right = temp;
+
+        return n;
     }
 
-    // rotates the tree such that the subRoot is replaced with it's left child with subRoot becoming the right child of the new subRoot. prev now points to the new subRoot.
-    private void rotateRight(Node node, Node prev) {
-        Node oldRoot = node;
-
-        node = node.left;
-        oldRoot.left = node.right;
-        node.left = oldRoot;
-
-        if (prev == null) {
-            root = node;
-        } else {
-            if(prev.right == oldRoot){
-                prev.right = node;
-            } else {
-                prev.left = node;
-            }
+    private Node rotateRight(Node node) {
+        if (node == null || node.left == null) {
+            return node;
         }
+
+        Node n = node.left;
+        Node temp = n.right;
+
+        n.right = node;
+        node.left = temp;
+
+        return n;
     }
 
     int getHeight() {
@@ -265,31 +270,17 @@ class BST {
         if (node == null) {
             return -1;
         }
-        //return ((1 + height(node.left)) - (1 + height(node.right)));
-        return 1 + (height(node.left) - height(node.right));
+        return 1 + Math.max(height(node.left), height(node.right));
     }
 
-    void balance() {
-        balance(root);
+    int getBalance() {
+        return balance(root);
     }
 
-    private void balance(Node node) {
+    private int balance(Node node){
         if (node == null) {
-            return;
+            return 0;
         }
-        if (height(node) != 0) {
-            if (height(node) > 0) {
-                balance(node.left);
-                if (node.left != null) {
-                    rotateLeft(node.left, node);
-                }
-            }
-            if (height(node) < 0) {
-                balance(node.right);
-                if (node.right != null) {
-                    rotateRight(node.right, node);
-                }
-            }
-        }
+        return height(node.left) - height(node.right);
     }
 }
